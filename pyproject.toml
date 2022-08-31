@@ -4,6 +4,10 @@ version = "0.1.0"
 description = "A library and CLI tool manipulating EDS graphs with well-known interfaces."
 authors = ["Yixuan-Wang <tom-yx_wang@outlook.com>"]
 license = "MIT"
+readme = "README.md"
+
+[tool.poetry.scripts]
+graphedes = "graphedes.main:app"
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -12,8 +16,12 @@ networkx = "^2.8.6"
 PyDelphin = "^1.6.0"
 returns = "^0.19.0"
 pydot = "^1.4.2"
+typer = {extras = ["all"], version = "^0.6.1", optional = true}
 
 [tool.poetry.dev-dependencies]
+
+[tool.poetry.extras]
+cli = ["typer"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

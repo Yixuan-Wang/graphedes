@@ -1,9 +1,17 @@
+from dataclasses import dataclass
 import html
+from typing import Optional
 
 import networkx as nx
 import pydot as dt
 
 from graphedes.convert import EdsNode, EdsNodeTy
+
+
+@dataclass
+class NxToDotConfig:
+    use_node_ty_colors: bool = True
+    font: Optional[str] = None
 
 
 def label(graph: nx.DiGraph) -> nx.DiGraph:
@@ -28,17 +36,25 @@ def label(graph: nx.DiGraph) -> nx.DiGraph:
             "label"
         ] = f'<<table align="center" border="0" cellspacing="0"><tr><td colspan="2">{html.escape(meta.predicate)}</td></tr><tr><td colspan="2">{html.escape(f"<{meta.span[0]},{meta.span[1]}>")}</td></tr>{"".join(properties)}</table>>'
 
+    for handle_u, handle_v in graph.edges:
+        edge = graph.edges[handle_u, handle_v]
+        meta = edge["meta"]
+        edge["label"] = '"{}"'.format(html.escape(f"{meta.ty}"))
+
+    return graph
+
+
+def color(graph: nx.DiGraph) -> nx.DiGraph:
+    for handle in graph.nodes:
+        node = graph.nodes[handle]
+        meta: EdsNode = node["meta"]
+
         if meta.ty == EdsNodeTy.E:
             node["color"] = "red"
         elif meta.ty == EdsNodeTy.X:
             node["color"] = "black"
         else:
             node["color"] = "blue"
-
-    for handle_u, handle_v in graph.edges:
-        edge = graph.edges[handle_u, handle_v]
-        meta = edge["meta"]
-        edge["label"] = '"{}"'.format(html.escape(f"{meta.ty}"))
 
     return graph
 
@@ -84,9 +100,10 @@ def get_default_edge(dot: dt.Dot) -> dt.Node:
         return node
 
 
-def stylize(dot: dt.Dot) -> dt.Dot:
-    get_default_node(dot).set("fontname", "Iosevka")
-    get_default_edge(dot).set("fontname", "Iosevka")
+def stylize(dot: dt.Dot, *, font: Optional[str] = None) -> dt.Dot:
+    if font is not None:
+        get_default_node(dot).set("fontname", font)
+        get_default_edge(dot).set("fontname", font)
 
     for node in dot.get_node_list():
         node: dt.Node
@@ -102,10 +119,15 @@ def stylize(dot: dt.Dot) -> dt.Dot:
     return dot
 
 
-def nx_to_dot(graph: nx.DiGraph) -> dt.Dot:
-    graph = inject_default(clean(label(graph)))
+def nx_to_dot(graph: nx.DiGraph, config: NxToDotConfig = NxToDotConfig()) -> dt.Dot:
+    graph = label(graph)
+
+    if config.use_node_ty_colors:
+        graph = color(graph)
+
+    graph = inject_default(clean(graph))
 
     dot = nx.nx_pydot.to_pydot(graph)
-    dot = stylize(dot)
+    dot = stylize(dot, font=config.font)
 
     return dot

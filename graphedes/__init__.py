@@ -1,6 +1,12 @@
-from graphedes.convert import (EdsEdge, EdsEdgeTy, EdsNode, EdsNodeTy,
-                               EdsToNxConfig, eds_to_nx)
-from graphedes.prepare import nx_to_dot
+from graphedes.convert import (
+    EdsEdge,
+    EdsEdgeTy,
+    EdsNode,
+    EdsNodeTy,
+    EdsToNxConfig,
+    eds_to_nx,
+)
+from graphedes.prepare import nx_to_dot, NxToDotConfig
 
 __all__ = [
     "eds_to_nx",
@@ -10,4 +16,5 @@ __all__ = [
     "EdsNode",
     "EdsNodeTy",
     "EdsToNxConfig",
+    "NxToDotConfig",
 ]
