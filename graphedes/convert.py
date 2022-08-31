@@ -1,9 +1,8 @@
 from __future__ import annotations
-from resource import RLIM_INFINITY
 
 import sys
 from dataclasses import dataclass
-from enum import Enum, auto
+from enum import Enum
 from typing import Any, Optional, cast
 
 if sys.version_info > (3, 10):
@@ -13,11 +12,10 @@ else:
 
 import delphin.eds as di_eds
 import networkx as nx
-from returns.result import Failure, Result, Success
 
 
 @dataclass
-class EdsNode():
+class EdsNode:
     # _: Optional[di_eds.Node]
     # """The original `delphin.eds.Node` object. Can be erased for serialization reasons."""
 
@@ -36,6 +34,7 @@ class EdsNode():
     ty: EdsNodeTy
     """The type of this EDS node."""
 
+
 class EdsNodeTy(str, Enum):
     X = "x"
     """Variable"""
@@ -46,10 +45,12 @@ class EdsNodeTy(str, Enum):
     Q = "q"
     """Quantifier"""
 
+
 @dataclass
-class EdsEdge():
+class EdsEdge:
     ty: EdsEdgeTy
     """The type of this EDS edge."""
+
 
 class EdsEdgeTy(int):
     BV = 0
@@ -84,9 +85,11 @@ class EdsEdgeTy(int):
     def __str__(self) -> str:
         return self.__repr__()
 
+
 @dataclass
-class EdsToNxConfig():
+class EdsToNxConfig:
     include_delphin_node: bool = False
+
 
 def eds_to_nx(eds: di_eds.EDS, config: EdsToNxConfig = EdsToNxConfig()) -> nx.DiGraph:
     """
@@ -109,17 +112,14 @@ def eds_to_nx(eds: di_eds.EDS, config: EdsToNxConfig = EdsToNxConfig()) -> nx.Di
                 span=(di_node.cfrom, di_node.cto),
                 constant=di_node.carg,
                 properties=di_node.properties if di_node.properties is not None else {},
-                ty=EdsNodeTy(ty if (ty := di_node.type) is not None else "q")
-            )
+                ty=EdsNodeTy(ty if (ty := di_node.type) is not None else "q"),
+            ),
         )
         if config.include_delphin_node:
             graph.nodes[di_node.id]["_"] = di_node
 
     for lhs_id, ty_str, rhs_id in eds.edges:
         ty = EdsEdgeTy(ty_str)
-        graph.add_edge(lhs_id, rhs_id, meta=EdsEdge(
-            ty=ty
-        ))
+        graph.add_edge(lhs_id, rhs_id, meta=EdsEdge(ty=ty))
 
     return graph
-

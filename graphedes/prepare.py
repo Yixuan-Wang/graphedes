@@ -1,8 +1,10 @@
 import html
+
 import networkx as nx
 import pydot as dt
 
-from .convert import EdsNode, EdsNodeTy, EdsEdgeTy
+from graphedes.convert import EdsNode, EdsNodeTy
+
 
 def label(graph: nx.DiGraph) -> nx.DiGraph:
     """
@@ -17,9 +19,14 @@ def label(graph: nx.DiGraph) -> nx.DiGraph:
         node = graph.nodes[handle]
         meta: EdsNode = node["meta"]
 
-        properties = [f"<tr><td sides=\"l\" border=\"1\" align=\"left\">{html.escape(key)}</td><td sides=\"r\" border=\"1\" align=\"left\">{html.escape(val)}</td></tr>" for key, val in meta.properties.items()]
+        properties = [
+            f'<tr><td sides="l" border="1" align="left">{html.escape(key)}</td><td sides="r" border="1" align="left">{html.escape(val)}</td></tr>'
+            for key, val in meta.properties.items()
+        ]
 
-        node["label"] = f'<<table align="center" border="0" cellspacing="0"><tr><td colspan="2">{html.escape(meta.predicate)}</td></tr><tr><td colspan="2">{html.escape(f"<{meta.span[0]},{meta.span[1]}>")}</td></tr>{"".join(properties)}</table>>'
+        node[
+            "label"
+        ] = f'<<table align="center" border="0" cellspacing="0"><tr><td colspan="2">{html.escape(meta.predicate)}</td></tr><tr><td colspan="2">{html.escape(f"<{meta.span[0]},{meta.span[1]}>")}</td></tr>{"".join(properties)}</table>>'
 
         if meta.ty == EdsNodeTy.E:
             node["color"] = "red"
@@ -28,26 +35,29 @@ def label(graph: nx.DiGraph) -> nx.DiGraph:
         else:
             node["color"] = "blue"
 
-
     for handle_u, handle_v in graph.edges:
         edge = graph.edges[handle_u, handle_v]
         meta = edge["meta"]
-        edge["label"] = "\"{}\"".format(html.escape(f"{meta.ty}"))
+        edge["label"] = '"{}"'.format(html.escape(f"{meta.ty}"))
 
     return graph
+
 
 def clean(graph: nx.DiGraph) -> nx.DiGraph:
     for handle in graph.nodes:
         node = graph.nodes[handle]
         del node["meta"]
-        if "_" in node: del node["_"]
+        if "_" in node:
+            del node["_"]
 
     for handle_u, handle_v in graph.edges:
         edge = graph.edges[handle_u, handle_v]
         del edge["meta"]
-        if "_" in edge: del edge["_"]
+        if "_" in edge:
+            del edge["_"]
 
     return graph
+
 
 def inject_default(graph: nx.DiGraph) -> nx.DiGraph:
     defaults = nx.DiGraph()
@@ -64,6 +74,7 @@ def get_default_node(dot: dt.Dot) -> dt.Node:
         dot.add_node(node)
         return node
 
+
 def get_default_edge(dot: dt.Dot) -> dt.Node:
     if (lst := dot.get_node("edge")) and len(lst) != 0:
         return lst[0]
@@ -71,6 +82,7 @@ def get_default_edge(dot: dt.Dot) -> dt.Node:
         node = dt.Node("edge")
         dot.add_node(node)
         return node
+
 
 def stylize(dot: dt.Dot) -> dt.Dot:
     get_default_node(dot).set("fontname", "Iosevka")
@@ -82,13 +94,13 @@ def stylize(dot: dt.Dot) -> dt.Dot:
 
         if (color := node.get("color")) is not None:
             node.set("fontcolor", color)
-    
 
     # for edge in dot.get_edge_list():
-        # edge: dt.Edge
-        # edge.set("fontname", "JetBrains Mono")
-    
+    # edge: dt.Edge
+    # edge.set("fontname", "JetBrains Mono")
+
     return dot
+
 
 def nx_to_dot(graph: nx.DiGraph) -> dt.Dot:
     graph = inject_default(clean(label(graph)))
